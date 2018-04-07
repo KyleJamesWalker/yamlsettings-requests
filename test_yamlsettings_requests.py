@@ -60,21 +60,18 @@ def test_auth_required(resps):
 
 def test_no_raise_with_unexpected(resps):
     """Test Runtime Error when excepted status code"""
-    url = 'http://testing.com/one'
-    obj = {'error': True}
-    expected = 200
-    status = 500
+    url_1 = 'http://testing.com/one'
+    url_2 = 'http://testing.com/two'
+    expected = 202
     raise_on = False
 
-    resps.add(responses.GET, url, json=obj, status=status)
+    resps.add(responses.GET, url_1, json={'error': True}, status=500)
+    resps.add(responses.GET, url_2, json={'foo': 'bar'}, status=202)
 
-    # OSError means the file was not found, and when passing an array the
-    # library will keep looking
-    with pytest.raises(OSError):
-        config = yamlsettings.load(url,
-                                   expected_status_code=expected,
-                                   raise_on_status=raise_on)
-
+    config = yamlsettings.load([url_1, url_2],
+                               expected_status_code=expected,
+                               raise_on_status=raise_on)
+    assert config.foo == 'bar'
 
 
 def test_raise_with_unexpected(resps):
@@ -89,9 +86,9 @@ def test_raise_with_unexpected(resps):
 
     # RuntimeError stops yamlsettings from trying the next url
     with pytest.raises(RuntimeError):
-        config = yamlsettings.load(url,
-                                   expected_status_code=expected,
-                                   raise_on_status=raise_on)
+        yamlsettings.load(url,
+                          expected_status_code=expected,
+                          raise_on_status=raise_on)
 
 
 def test_not_found_ok(resps):
