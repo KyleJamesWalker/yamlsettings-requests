@@ -24,7 +24,7 @@ def resps():
         ('http://test:foo@testing.com:99/foobar', {'test': 'win'})
     ],
 )
-def test_load(resps, url, obj):
+def test_user_pass_combos(resps, url, obj):
     """Test loading with u/p urls"""
     resps.add(responses.GET, url,
               json=obj, status=200)
@@ -56,3 +56,51 @@ def test_auth_required(resps):
     auth_header = resps.calls[0].request.__dict__['headers']['Authorization']
     assert auth_header == "Basic QWxhZGRpbjpPcGVuU2VzYW1l"
     assert config.secure is True
+
+
+def test_no_raise_with_unexpected(resps):
+    """Test Runtime Error when excepted status code"""
+    url = 'http://testing.com/one'
+    obj = {'error': True}
+    expected = 200
+    status = 500
+    raise_on = False
+
+    resps.add(responses.GET, url, json=obj, status=status)
+
+    # OSError means the file was not found, and when passing an array the
+    # library will keep looking
+    with pytest.raises(OSError):
+        config = yamlsettings.load(url,
+                                   expected_status_code=expected,
+                                   raise_on_status=raise_on)
+
+
+
+def test_raise_with_unexpected(resps):
+    """Test Runtime Error when excepted status code"""
+    url = 'http://testing.com/one'
+    obj = {'error': True}
+    expected = 200
+    status = 500
+    raise_on = True
+
+    resps.add(responses.GET, url, json=obj, status=status)
+
+    # RuntimeError stops yamlsettings from trying the next url
+    with pytest.raises(RuntimeError):
+        config = yamlsettings.load(url,
+                                   expected_status_code=expected,
+                                   raise_on_status=raise_on)
+
+
+def test_not_found_ok(resps):
+    """Test 404 can return data when expected"""
+    url = 'http://missing.com/data'
+    obj = {'hidden': 'treasure'}
+    expected = 404
+    status = 404
+
+    resps.add(responses.GET, url, json=obj, status=status)
+    config = yamlsettings.load(url, expected_status_code=expected)
+    assert config.hidden == 'treasure'
