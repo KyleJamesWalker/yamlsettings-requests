@@ -1,5 +1,6 @@
 import requests
-import urllib
+
+from six.moves import urllib
 from yamlsettings.extensions.base import YamlSettingsExtension
 
 # Example URL:
@@ -58,10 +59,8 @@ class RequestsExtension(YamlSettingsExtension):
         raise_on_status = kwargs.pop('raise_on_status', True)
 
         resp = requests.get(url, **kwargs)
-        if resp.status_code == 404:
-            raise IOError
-        elif resp.status_code != expected_status_code:
-            if raise_on_status:
+        if resp.status_code != expected_status_code:
+            if raise_on_status and resp.status_code != 404:
                 raise RuntimeError(resp.status_code)
             else:
                 raise IOError
