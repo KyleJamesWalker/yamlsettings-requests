@@ -3,19 +3,12 @@ import requests
 from six.moves import urllib
 from yamlsettings.extensions.base import YamlSettingsExtension
 
-# Example URL:
-# https://gist.githubusercontent.com/elizazhang/1b31cf2cb8b36799a4a231e9d47743c3/raw/95aa81307f9363f3e8d0542848fc4675a2bd6b9c/sample.yaml
-
 
 class RequestsExtension(YamlSettingsExtension):
     """Open URLs with the request library
 
     """
     protocols = ['http', 'https']
-    # default_query = {
-    #     'expected_status_code': "200",
-    #     'raise_on_status': "true",
-    # }
 
     @classmethod
     def conform_query(cls, query):
@@ -25,7 +18,7 @@ class RequestsExtension(YamlSettingsExtension):
     @staticmethod
     def rebuild_url(scheme, path, fragment, username,
                     password, hostname, port, query):
-        # Rebuild the netloc value
+        """Rebuild the netloc value"""
         netloc = "@".join(filter(None, [
             ":".join(
                 filter(None, [
@@ -53,6 +46,7 @@ class RequestsExtension(YamlSettingsExtension):
     def load_target(cls, scheme, path, fragment, username,
                     password, hostname, port, query,
                     load_method, **kwargs):
+        """Load Target via requests"""
         url = cls.rebuild_url(scheme, path, fragment, username,
                               password, hostname, port, query)
         expected_status_code = kwargs.pop('expected_status_code', 200)
