@@ -13,6 +13,7 @@ Usage
 =====
 
 .. code-block:: python
+
  import yamlsetttings
 
  config = yamlsettings.load('https://www.example.com/config.yaml')
